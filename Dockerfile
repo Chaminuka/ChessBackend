@@ -2,11 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy the backend solution file
-COPY ChessBackende8.sln ./
-
-# Copy the project file for the backend
+# Copy the project and solution files
 COPY ChessBackende8/ChessBackende8.csproj ChessBackende8/
+COPY ChessBackende8.sln ./
 
 # Restore dependencies
 RUN dotnet restore
@@ -24,6 +22,9 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/ChessBackende8/out ./
+
+# Health check (optional)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD curl -f http://localhost:80/ || exit 1
 
 # Set the entry point for the application
 ENTRYPOINT ["dotnet", "ChessBackende8.dll"]
