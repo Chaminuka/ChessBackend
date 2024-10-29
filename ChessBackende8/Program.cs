@@ -1,5 +1,9 @@
 using ChessBackende8.Services; // Include this namespace if needed for custom services
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging; // Add this namespace
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,14 +21,9 @@ builder.Services.AddDbContext<DataContext>(options =>
 // Register any custom services for dependency injection
 builder.Services.AddScoped<GamesService>();
 builder.Services.AddScoped<Logic>();
-// Add this line in Program.cs if not already there
-builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddHttpContextAccessor(); // Add this line if not already there
 
 var app = builder.Build();
-
-// Call SeedUsers directly at startup
-SeedUsers();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -33,11 +32,32 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Middleware for logging errors
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next.Invoke();
+    }
+    catch (Exception ex)
+    {
+        // Log the exception
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An unhandled exception occurred while processing the request.");
+
+        // Return a 500 Internal Server Error response
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("An internal server error occurred.");
+    }
+});
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-app.Run();
 
+// Call SeedUsers directly at startup
+SeedUsers();
+app.Run();
 
 void SeedUsers()
 {
@@ -53,5 +73,3 @@ void SeedUsers()
         Console.WriteLine($"Seeded User: Username = {user.UserName}, Email = {user.Email}");
     }
 }
-
-
