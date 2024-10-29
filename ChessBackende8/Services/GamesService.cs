@@ -308,33 +308,17 @@ namespace ChessBackende8.Services
 
         public async Task<List<GameMe>> GetGamesBlack()
         {
-            var games = await _context.Games.ToListAsync();
-            var retGames = new List<GameMe>();
-
-            for (int i = 0; i < games.Count; i++)
-            {
-                if (!games[i].isWhite)
-                {
-                    retGames.Add(games[i]);
-                }
-            }
-            return retGames;
+            // Use LINQ to filter and return only the games where isWhite is false
+            return await _context.Games.Where(game => !game.isWhite).ToListAsync();
         }
+
 
         public async Task<List<GameMe>> GetGamesWhite()
         {
-            var games = await _context.Games.ToListAsync();
-            var retGames = new List<GameMe>();
-
-            for (int i = 0; i < games.Count; i++)
-            {
-                if (games[i].isWhite)
-                {
-                    retGames.Add(games[i]);
-                }
-            }
-            return retGames;
+            // Use LINQ to filter and return only the games where isWhite is true
+            return await _context.Games.Where(game => game.isWhite).ToListAsync();
         }
+
 
 
     }
